@@ -1,1 +1,1 @@
-export * from './cloudinary.health'
+export * from './cloudinary.health';

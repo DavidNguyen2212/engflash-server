@@ -14,7 +14,6 @@ import { User } from 'src/users/entities';
 import { OpenAIService } from 'src/shared/services/openai.service';
 // import { decode } from 'html-entities';
 
-
 @Injectable()
 export class TopicsService {
   constructor(

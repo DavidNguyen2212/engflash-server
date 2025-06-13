@@ -20,7 +20,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards';
 import { CardsService } from './cards.service';
 import { CurrentUser } from '../auth/decorators';
-import { Roles } from 'src/common/decorators'
+import { Roles } from 'src/common/decorators';
 import {
   ModifyExampleDTO,
   AddCardDTO,

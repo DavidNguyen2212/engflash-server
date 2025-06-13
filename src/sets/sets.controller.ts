@@ -1,21 +1,14 @@
 import {
-  Body,
   Controller,
   Get,
   Param,
-  ParseBoolPipe,
   ParseIntPipe,
-  Post,
-  Put,
-  Query,
   UseGuards,
-  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiParam,
-  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';

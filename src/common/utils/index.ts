@@ -1,1 +1,1 @@
-export * from './capitalizer.util'
+export * from './capitalizer.util';

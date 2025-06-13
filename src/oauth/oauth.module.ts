@@ -20,6 +20,6 @@ import { RedisModule } from '../redis/redis.module';
   ],
   controllers: [OauthController],
   providers: [OauthService],
-  exports: [OauthService]
+  exports: [OauthService],
 })
 export class OauthModule {}
