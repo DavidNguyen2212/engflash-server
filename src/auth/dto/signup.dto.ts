@@ -5,6 +5,7 @@ import {
   MinLength,
   MaxLength,
   IsEmail,
+  IsOptional,
 } from 'class-validator';
 
 export class SignupDto {
@@ -24,6 +25,14 @@ export class SignupDto {
   })
   @IsEmail()
   email: string;
+
+  @ApiProperty({
+    description: 'Avatar url of google account',
+    example: 'image.com',
+  })
+  @IsEmail()
+  @IsOptional()
+  avatarUrl?: string;
 
   @ApiProperty({
     description:

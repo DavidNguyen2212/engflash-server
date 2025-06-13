@@ -9,7 +9,6 @@ import {
 } from '@nestjs/terminus';
 import { CloudinaryHealthIndicator } from './indicators';
 
-
 @Controller('health')
 export class HealthController {
   constructor(
@@ -18,7 +17,7 @@ export class HealthController {
     private readonly db: TypeOrmHealthIndicator,
     private readonly disk: DiskHealthIndicator,
     private readonly memory: MemoryHealthIndicator,
-    private readonly cloudinary: CloudinaryHealthIndicator
+    private readonly cloudinary: CloudinaryHealthIndicator,
   ) {}
 
   @Get()
@@ -44,12 +43,18 @@ export class HealthController {
     */
     return this.health.check([
       // Check sẽ nhận một list các callback dùng để kiểm tra
-      () => this.http.pingCheck('engflash-docs', 'https://engflash-system-ngk.onrender.com/api'),
+      () =>
+        this.http.pingCheck(
+          'engflash-docs',
+          'https://engflash-system-ngk.onrender.com/api',
+        ),
       () => this.cloudinary.isHealthy('cloudinary'),
+      () => this.db.pingCheck('postgres', { timeout: 1500 }),
       () =>
-        this.db.pingCheck('postgres', { timeout: 1500 }),
-      () =>
-        this.disk.checkStorage('storage', { path: 'C:\\', thresholdPercent: 0.5 }), // use '/' on linux
+        this.disk.checkStorage('storage', {
+          path: 'C:\\',
+          thresholdPercent: 0.5,
+        }), // use '/' on linux
       () => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024),
       () => this.memory.checkRSS('memory_rss', 300 * 1024 * 1024),
     ]);

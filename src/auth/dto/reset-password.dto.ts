@@ -22,7 +22,7 @@ export class ResetPasswordDto {
   @IsString()
   @Length(6, 6)
   code: string;
-  
+
   @ApiProperty({
     description: 'ID of the user',
     example: 2,

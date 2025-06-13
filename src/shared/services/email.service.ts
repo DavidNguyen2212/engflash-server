@@ -20,7 +20,7 @@ export class EmailService {
 
   async sendVerificationCode(to: string, code: string): Promise<void> {
     const mailOptions = {
-      from: this.configService.get('SMTP_FROM'),
+      from: this.configService.get<string>('SMTP_FROM')!,
       to,
       subject: 'Your EngFlash Verification Code',
       html: `

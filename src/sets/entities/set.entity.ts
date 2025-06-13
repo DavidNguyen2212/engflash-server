@@ -9,7 +9,6 @@ import {
 import { Card } from '../../cards/entities/card.entity'; // Import entity Card
 import { User } from '../../users/entities';
 
-
 @Entity('sets') // Tên bảng trong cơ sở dữ liệu là 'sets'
 export class Set {
   @PrimaryGeneratedColumn()

@@ -13,7 +13,6 @@ import { UserDailyActivity } from '../../statistics/entities';
 import { Notification } from '../../notifications/entities';
 import { Role } from '../../role/entities';
 
-
 @Entity('users')
 export class User extends BaseEntity {
   // Trường này auto primary key
@@ -72,6 +71,9 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   lastLogin: Date;
 
+  @Column({ nullable: true })
+  avatarUrl: string;
+
   @OneToMany(() => Topic, (topic) => topic.user)
   topics: Topic[];
 
@@ -86,17 +88,19 @@ export class User extends BaseEntity {
 
   // Eager giúp tự động load roles khi truy xuất user, mà bạn không cần gọi .find({ relations: ["roles"] })
   @ManyToMany(() => Role, (role) => role.users, { eager: true })
-  @JoinTable({ name: 'user_roles', joinColumn: { name: 'user_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' }
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
   })
-  roles: Role[]
+  roles: Role[];
 
   // Thêm hai helper method để check row cho nhanh
   hasRole(roleName: string): boolean {
-    return this.roles?.some((role) => role.name === roleName) || false
+    return this.roles?.some((role) => role.name === roleName) || false;
   }
 
   getRoleNames(): string[] {
-    return this.roles?.map((role) => role.name) || []
+    return this.roles?.map((role) => role.name) || [];
   }
 }

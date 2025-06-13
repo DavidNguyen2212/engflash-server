@@ -15,6 +15,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { HealthModule } from './health/health.module';
 import { DataSource } from 'typeorm';
 import { v2 as cloudinary } from 'cloudinary';
+import { OauthModule } from './oauth/oauth.module';
 
 @Module({
   imports: [
@@ -22,25 +23,23 @@ import { v2 as cloudinary } from 'cloudinary';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        host: configService.get('DATABASE_HOST'),
-        port: configService.get<number>('DATABASE_PORT'),
-        username: configService.get('DATABASE_USERNAME'),
-        password: configService.get('DATABASE_PASSWORD'),
-        database: configService.get('DATABASE_NAME'),
+        url: configService.get<string>('DATABASE_URL'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        migrations: ['src/database/migrations/*.ts'],
+        migrations: ['database/migrations/*.ts'],
         synchronize: false,
-        logging: true,
+        logging: false,
         logger: 'advanced-console',
         retryAttempts: 5,
         retryDelay: 3000,
         autoLoadEntities: true,
         keepConnectionAlive: true,
         verboseRetryLog: true,
-        ssl: true,
+        ssl: configService.get<boolean>('DATABASE_SSL'),
         extra: {
-          max: 20,
-          connectionTimeoutMillis: 10000,
+          max: configService.get<number>('DB_CONNECTION_LIMIT') || 10, // for pg
+          idleTimeoutMillis: configService.get<number>('DB_TIMEOUT') || 60000,
+          connectionTimeoutMillis:
+            configService.get<number>('DB_ACQUIRE_TIMEOUT') || 60000,
         },
       }),
       inject: [ConfigService],
@@ -60,17 +59,20 @@ import { v2 as cloudinary } from 'cloudinary';
     SetsModule,
     NotificationsModule,
     HealthModule,
+    OauthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {
-  constructor(private dataSource: DataSource, private configService: ConfigService) {
+  constructor(
+    private dataSource: DataSource,
+    private configService: ConfigService,
+  ) {
     cloudinary.config({
       cloud_name: this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
       api_key: this.configService.get<string>('CLOUDINARY_API_KEY'),
       api_secret: this.configService.get<string>('CLOUDINARY_API_SECRET'),
     });
   }
-
 }

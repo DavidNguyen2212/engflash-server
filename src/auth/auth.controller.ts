@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Patch,
   Req,
+  Res,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -32,14 +33,12 @@ import {
   PassCodeDto,
 } from './dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
   @ApiOperation({
@@ -135,10 +134,19 @@ export class AuthController {
     status: 200,
     description: 'Log out current user successfully',
   })
-  async logOut(@Body() logOutData: RefreshDTO) {
+  async logOut(
+    @Body() logOutData: RefreshDTO,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const isMobile = req.headers['x-client-type'] === 'mobile';
+    if (!isMobile) {
+      res.clearCookie('csrf_token');
+      res.clearCookie('ef_ac_token');
+      res.clearCookie('ef_rf_token');
+    }
     return this.authService.handleLogOut(logOutData.refreshToken);
   }
-
 
   @Post('forgot-password')
   @ApiOperation({
@@ -163,7 +171,10 @@ export class AuthController {
     description: 'User_id returns if email exists',
   })
   async verifyPassCode(@Body() passCodeData: PassCodeDto) {
-    return this.authService.verifyPassCode(passCodeData.email, passCodeData.resetCode);
+    return this.authService.verifyPassCode(
+      passCodeData.email,
+      passCodeData.resetCode,
+    );
   }
 
   @Post('reset-password')
@@ -204,25 +215,24 @@ export class AuthController {
   }
 }
 
-
 // @Get('test-email')
-  // @ApiOperation({
-  //   summary: 'Test email configuration',
-  //   description: 'Sends a test email to verify SMTP settings',
-  // })
-  // @ApiQuery({
-  //   name: 'email',
-  //   required: true,
-  //   description: 'Email address to send test email to',
-  // })
-  // async testEmail(@Query('email') email: string) {
-  //   try {
-  //     await this.emailService.sendTestEmail(email);
-  //     return { message: 'Test email sent successfully' };
-  //   } catch (error) {
-  //     return {
-  //       error: 'Failed to send test email',
-  //       details: error.message,
-  //     };
-  //   }
-  // }
+// @ApiOperation({
+//   summary: 'Test email configuration',
+//   description: 'Sends a test email to verify SMTP settings',
+// })
+// @ApiQuery({
+//   name: 'email',
+//   required: true,
+//   description: 'Email address to send test email to',
+// })
+// async testEmail(@Query('email') email: string) {
+//   try {
+//     await this.emailService.sendTestEmail(email);
+//     return { message: 'Test email sent successfully' };
+//   } catch (error) {
+//     return {
+//       error: 'Failed to send test email',
+//       details: error.message,
+//     };
+//   }
+// }
