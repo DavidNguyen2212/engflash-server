@@ -7,6 +7,6 @@ import { CloudinaryHealthIndicator } from './indicators';
 @Module({
   imports: [TerminusModule, HttpModule],
   controllers: [HealthController],
-  providers: [CloudinaryHealthIndicator]
+  providers: [CloudinaryHealthIndicator],
 })
 export class HealthModule {}

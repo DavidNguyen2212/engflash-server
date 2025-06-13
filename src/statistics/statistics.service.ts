@@ -17,8 +17,6 @@ import {
   UserCardReview,
   UserCardReviewLog,
 } from 'src/cards/entities';
-import dayjs from 'dayjs';
-import axios from 'axios';
 import { User } from 'src/users/entities';
 import { OpenAIService } from 'src/shared/services/openai.service';
 import { UserDailyActivity } from './entities';

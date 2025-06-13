@@ -5,7 +5,11 @@ import { join } from 'path';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { DatabaseExceptionFilter, GlobalExceptionFilter, ValidationExceptionFilter } from './common/filters';
+import {
+  DatabaseExceptionFilter,
+  GlobalExceptionFilter,
+  ValidationExceptionFilter,
+} from './common/filters';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -17,8 +21,8 @@ async function bootstrap() {
   app.useGlobalFilters(
     new GlobalExceptionFilter(),
     new ValidationExceptionFilter(),
-    new DatabaseExceptionFilter()
-  )
+    new DatabaseExceptionFilter(),
+  );
   app.useGlobalPipes(
     new ValidationPipe({
       // Chuẩn rest
