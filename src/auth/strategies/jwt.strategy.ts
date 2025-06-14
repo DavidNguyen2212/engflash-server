@@ -23,22 +23,29 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req) => req?.cookies?.ef_ac_token || ExtractJwt.fromAuthHeaderAsBearerToken()(req)
+      ]),
       ignoreExpiration: false,
       secretOrKey: jwtSecret,
     });
   }
 
   async validate(payload: any): Promise<JwtPayload> {
+    if (!payload?.sub || !payload?.email) {
+      throw new UnauthorizedException('Invalid token payload');
+    }
+  
     const user = await this.usersService.findOne(payload.sub);
     if (!user) {
       throw new UnauthorizedException('Invalid token: user not found');
     }
-
+    
     return {
       id: payload.sub,
       email: payload.email,
       roles: user.getRoleNames(),
     };
   }
+  
 }
