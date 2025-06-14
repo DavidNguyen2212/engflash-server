@@ -19,13 +19,16 @@ import { JwtAuthGuard } from '../auth/guards';
 import { CurrentUser } from '../auth/decorators';
 import { NotificationsService } from './notifications.service';
 import { UpdateSetDTO } from './dto';
+import { FireBaseService } from '../firebase/firebase.service';
 
 @ApiTags('notifications')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+// @UseGuards(JwtAuthGuard)
 @Controller('notifications')
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(private readonly notificationsService: NotificationsService,
+    private readonly firebaseService: FireBaseService
+  ) {}
   // Private route to add word to a default topic
 
   // Learning
@@ -47,5 +50,12 @@ export class NotificationsController {
     await this.notificationsService.notifySetUpdated(setId, updatedSet);
 
     return updatedSet;
+  }
+
+  @Post('send')
+  async sendNotification(@Body('token') token: string, @Body('title') title: string, @Body('body') body: string) {
+    // Data must be an object
+    await this.firebaseService.sendPushNotifications(token, title, body, {message: "ok"})
+    return { sucess: true, message: "Notification sent!"}
   }
 }

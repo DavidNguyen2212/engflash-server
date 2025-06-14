@@ -14,6 +14,7 @@ import { UserDailyActivity } from 'src/statistics/entities';
 import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
 import { Notification } from './entities';
+import { FireBaseModule } from '../firebase/firebase.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { Notification } from './entities';
     ]),
     forwardRef(() => CardsModule),
     SharedModule,
+    FireBaseModule
   ],
   controllers: [NotificationsController],
   providers: [NotificationsService],
