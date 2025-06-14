@@ -16,6 +16,8 @@ import Redis from 'ioredis';
 import { UAParser } from 'ua-parser-js';
 import { Request } from 'express';
 import { RolesService } from '../role/role.service';
+import { REDIS_CONFIG } from './constant';
+import { BasicAuthResult } from './interface';
 
 @Injectable()
 export class AuthService {
@@ -61,8 +63,7 @@ export class AuthService {
     );
 
     return {
-      message:
-        'Signing up successfully. Check your email for verification code!',
+      message: 'Signing up successfully. Check your email for verification code!',
       verificationEmailSent: true,
       user: this.usersService.getPublicUserFields(user),
     };
@@ -80,11 +81,11 @@ export class AuthService {
 
   async login(loginDto: LoginDto, req: Request) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
-    const ef_rf_token = this.generateRfToken(user);
-    const hashed_ef_rf_token = createHash('sha256')
-      .update(ef_rf_token)
+    const refresh_token = this.generateRfToken(user);
+    const hashed_refresh_token = createHash('sha256')
+      .update(refresh_token)
       .digest('hex');
-    const payload = this.jwtService.decode(ef_rf_token);
+    const payload = this.jwtService.decode(refresh_token);
     const key = `refresh:${user.id}:${payload.jti}`;
     // Extract info
     const ip = req?.ip;
@@ -94,26 +95,19 @@ export class AuthService {
     const deviceInfo = `${os.name} on ${device.type}`;
 
     const data = {
-      hash: hashed_ef_rf_token,
+      hash: hashed_refresh_token,
       ua,
       ip,
       createdAt: new Date().toISOString(),
       deviceInfo,
     };
 
-    await this.redis.set(key, JSON.stringify(data), 'EX', 30 * 24 * 3600);
+    await this.redis.set(key, JSON.stringify(data), 'EX', REDIS_CONFIG.RFTOKEN_MAX_AGE);
     await this.usersService.update(user.id, { lastLogin: new Date() });
 
     return {
-      ef_ac_token: this.generateToken(user),
-      ef_rf_token,
-      expires_at: new Date(Date.now() + 2 * 60 * 1000).toISOString(),
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        isEmailVerified: user.isEmailVerified,
-      },
+      access_token: this.generateToken(user),
+      refresh_token,
     };
   }
 
@@ -212,7 +206,7 @@ export class AuthService {
     return this.jwtService.sign(payload, { expiresIn: '30d' });
   }
 
-  async refreshToken(refreshToken: string) {
+  async refreshToken(refreshToken: string): Promise<BasicAuthResult> {
     // 1. Validate refresh token and load user
     const payload = this.jwtService.verify(refreshToken);
     if (payload?.type !== 'refresh') {
@@ -252,12 +246,11 @@ export class AuthService {
       hash: newHashed,
       // createdAt: new Date().toISOString(),
     };
-    await this.redis.set(newKey, JSON.stringify(newData), 'EX', 30 * 24 * 3600);
+    await this.redis.set(newKey, JSON.stringify(newData), 'EX', REDIS_CONFIG.RFTOKEN_MAX_AGE);
 
     return {
-      ef_ac_token: this.generateToken(user),
-      ef_rf_token: newRfToken,
-      expires_at: new Date(Date.now() + 2 * 60 * 1000).toISOString(),
+      access_token: this.generateToken(user),
+      refresh_token: newRfToken,
     };
   }
 
@@ -277,7 +270,6 @@ export class AuthService {
     }
 
     await this.redis.del(key);
-    return { message: 'Logged out' };
   }
 
   async validateRefreshToken(

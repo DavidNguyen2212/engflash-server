@@ -30,7 +30,7 @@ export class SignupDto {
     description: 'Avatar url of google account',
     example: 'image.com',
   })
-  @IsEmail()
+  @IsString()
   @IsOptional()
   avatarUrl?: string;
 

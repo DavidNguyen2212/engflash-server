@@ -27,7 +27,7 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('User has no roles');
     }
     const hasRole = requireRoles.some((role: string) =>
-      user.roles.include(role),
+      user.roles.includes(role),
     );
     if (!hasRole) {
       throw new ForbiddenException('You do not have permission!');

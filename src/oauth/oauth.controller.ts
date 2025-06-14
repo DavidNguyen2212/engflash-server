@@ -16,6 +16,7 @@ import { ConfigService } from '@nestjs/config';
 import { createHmac, randomUUID } from 'crypto';
 import Redis from 'ioredis';
 import { OAUTH_CONFIG, REDIS_CONFIG } from './constant';
+import { SetCookies } from '../auth/utils';
 
 @ApiTags('Oauth')
 @Controller('oauth')
@@ -57,39 +58,19 @@ export class OauthController {
 
     // Case: web client
     // Set cookie
-    res.cookie('ef_ac_token', result.access_token, {
-      // domain: '.engflash.com', only set in production
-      httpOnly: true,
-      path: '/',
-      secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'strict',
-      maxAge: OAUTH_CONFIG.ACTOKEN_MAX_AGE, // 5'
-    });
-
-    const rawCSRF = randomUUID();
-    const signature = createHmac(
-      'sha256',
-      this.configService.get('CSRF_SECRET')!,
-    )
-      .update(rawCSRF)
-      .digest('hex');
-    const signedCsrfToken = `${rawCSRF}.${signature}`;
-    res.cookie('ef_csrf_token', signedCsrfToken, {
-      httpOnly: false, // FE can read to put it in x-csrf-token
-      sameSite: 'strict',
-      path: '/',
-      secure: this.configService.get('NODE_ENV') === 'production',
-      maxAge: OAUTH_CONFIG.ACTOKEN_MAX_AGE, // 5'
-    });
-
-    res.cookie('ef_rf_token', result.refresh_token, {
-      // domain: '.engflash.com', only set in production
-      httpOnly: true,
-      path: '/',
-      secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'strict',
-      maxAge: OAUTH_CONFIG.RFTOKEN_MAX_AGE, // 30ng
-    });
+    SetCookies({ 
+      req, res, 
+      tokens: {
+        access_token: result.access_token,
+        refresh_token: result.refresh_token
+      }, 
+      node_env: this.configService.get('NODE_ENV')!, 
+      csrf_secret: this.configService.get('CSRF_SECRET')!, 
+      maxAge: {
+        accessToken: OAUTH_CONFIG.ACTOKEN_MAX_AGE,
+        refreshToken: OAUTH_CONFIG.RFTOKEN_MAX_AGE
+      }
+    })
 
     const queryObject = {
       new_user: String(result.new_user),
