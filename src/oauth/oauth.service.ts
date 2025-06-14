@@ -44,7 +44,6 @@ export class OauthService {
   // Tiện sau này mở rộng mà không đụng chạm tới auth truyền thống
   // Nhằm tách bạch logic
   async handleGoogleOAuth(code: string, req: Request) {
-    console.log(code);
     const { access_token, id_token } = await this.getGoogleOAuthToken(code);
     // id_token trong data, giải mã với jwt.io sẽ lấy được payload
     // hoặc gọi lên api cx được

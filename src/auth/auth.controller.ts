@@ -8,6 +8,7 @@ import {
   Patch,
   Req,
   Res,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -19,7 +20,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators';
-import { JwtAuthGuard, LocalAuthGuard } from './guards';
+import { JwtAuthGuard } from './guards';
 import {
   LoginDto,
   LoginResponseDto,
@@ -34,11 +35,15 @@ import {
 } from './dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { Request, Response } from 'express';
+import { ConfigService } from '@nestjs/config';
+import { AUTH_CONFIG } from './constant';
+import { createHmac, randomUUID } from 'crypto';
+import { SetCookies } from './utils';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService, private readonly configService: ConfigService) {}
 
   @Post('signup')
   @ApiOperation({
@@ -56,7 +61,6 @@ export class AuthController {
     return this.authService.signup(signupDto);
   }
 
-  @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -76,8 +80,28 @@ export class AuthController {
   @ApiUnauthorizedResponse({
     description: 'Invalid credentials',
   })
-  async login(@Body() loginDto: LoginDto, @Req() req: Request) {
-    return this.authService.login(loginDto, req);
+  async login(@Body() loginDto: LoginDto, @Req() req: Request, @Res() res: Response) {
+    const result = await this.authService.login(loginDto, req);
+    const isMobile = req.headers['x-client-type'] === 'mobile'
+
+    // Case: mobile client, return directly
+    if (isMobile) {
+      return result
+    }
+
+    // Case: web
+    SetCookies({ 
+      req, res, 
+      tokens: result, 
+      node_env: this.configService.get('NODE_ENV')!, 
+      csrf_secret: this.configService.get('CSRF_SECRET')!, 
+      maxAge: {
+        accessToken: AUTH_CONFIG.ACTOKEN_MAX_AGE,
+        refreshToken: AUTH_CONFIG.RFTOKEN_MAX_AGE
+      }
+    })
+
+    res.status(200).json({ message: 'Logged in successfully' });
   }
 
   @Post('verify-email')
@@ -121,8 +145,28 @@ export class AuthController {
     status: 200,
     description: 'Create new access token successfully',
   })
-  async refreshToken(@Body() refreshData: RefreshDTO) {
-    return this.authService.refreshToken(refreshData.refreshToken);
+  async refreshToken(@Body() refreshData: RefreshDTO, @Req() req: Request, @Res() res: Response) {
+    const isMobile = req.headers['x-client-type'] === 'mobile'
+    const refreshToken = isMobile ? refreshData.refreshToken : req?.cookies['ef_rf_token'];
+    const result = await this.authService.refreshToken(refreshToken)
+
+    // Case: mobile client, return directly
+    if (isMobile) {
+      return result
+    }
+
+    SetCookies({ 
+      req, res, 
+      tokens: result, 
+      node_env: this.configService.get('NODE_ENV')!, 
+      csrf_secret: this.configService.get('CSRF_SECRET')!, 
+      maxAge: {
+        accessToken: AUTH_CONFIG.ACTOKEN_MAX_AGE,
+        refreshToken: AUTH_CONFIG.RFTOKEN_MAX_AGE
+      }
+    })
+
+    res.status(200).json({ success: true });
   }
 
   @Post('logout')
@@ -140,12 +184,20 @@ export class AuthController {
     @Res() res: Response,
   ) {
     const isMobile = req.headers['x-client-type'] === 'mobile';
+     // 1. Determine refresh token
+    const refreshToken = isMobile ? logOutData.refreshToken : req?.cookies['ef_rf_token'];
+
+    if (!refreshToken) {
+      throw new BadRequestException('Refresh token is required');
+    }
+
     if (!isMobile) {
-      res.clearCookie('csrf_token');
+      res.clearCookie('ef_csrf_token');
       res.clearCookie('ef_ac_token');
       res.clearCookie('ef_rf_token');
     }
-    return this.authService.handleLogOut(logOutData.refreshToken);
+    await this.authService.handleLogOut(refreshToken);
+    return res.status(200).json({ message: 'Logged out successfully' });
   }
 
   @Post('forgot-password')
