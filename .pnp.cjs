@@ -52,6 +52,7 @@ const RAW_RUNTIME_STATE =
           ["@swc/cli", "virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:0.6.0"],\
           ["@swc/core", "virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:1.12.1"],\
           ["@types/bcryptjs", "npm:3.0.0"],\
+          ["@types/cookie-parser", "virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:1.4.9"],\
           ["@types/express", "npm:5.0.3"],\
           ["@types/faker", "npm:6.6.8"],\
           ["@types/jest", "npm:29.5.14"],\
@@ -4065,6 +4066,26 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["@types/cookie-parser", [\
+      ["npm:1.4.9", {\
+        "packageLocation": "../../AppData/Local/Yarn/Berry/cache/@types-cookie-parser-npm-1.4.9-628dc5b6f4-10c0.zip/node_modules/@types/cookie-parser/",\
+        "packageDependencies": [\
+          ["@types/cookie-parser", "npm:1.4.9"]\
+        ],\
+        "linkType": "SOFT"\
+      }],\
+      ["virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:1.4.9", {\
+        "packageLocation": "./.yarn/__virtual__/@types-cookie-parser-virtual-b2239c2beb/3/AppData/Local/Yarn/Berry/cache/@types-cookie-parser-npm-1.4.9-628dc5b6f4-10c0.zip/node_modules/@types/cookie-parser/",\
+        "packageDependencies": [\
+          ["@types/cookie-parser", "virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:1.4.9"],\
+          ["@types/express", "npm:5.0.3"]\
+        ],\
+        "packagePeers": [\
+          "@types/express"\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["@types/cookiejar", [\
       ["npm:2.1.5", {\
         "packageLocation": "../../AppData/Local/Yarn/Berry/cache/@types-cookiejar-npm-2.1.5-f36531e52d-10c0.zip/node_modules/@types/cookiejar/",\
@@ -7470,6 +7491,7 @@ const RAW_RUNTIME_STATE =
           ["@swc/cli", "virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:0.6.0"],\
           ["@swc/core", "virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:1.12.1"],\
           ["@types/bcryptjs", "npm:3.0.0"],\
+          ["@types/cookie-parser", "virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:1.4.9"],\
           ["@types/express", "npm:5.0.3"],\
           ["@types/faker", "npm:6.6.8"],\
           ["@types/jest", "npm:29.5.14"],\

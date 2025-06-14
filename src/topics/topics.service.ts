@@ -36,10 +36,10 @@ export class TopicsService {
     });
   }
 
-  async getAllTopicsByUser(user_id: string) {
+  async getAllTopicsByUser(user_id: number) {
     const user = await this.userRepository.findOne({
       where: {
-        id: Number(user_id),
+        id: user_id,
       },
     });
 
@@ -105,7 +105,7 @@ export class TopicsService {
     return { topics };
   }
 
-  async getAllCardsfromTopic(user_id: string, topic_id: number) {
+  async getAllCardsfromTopic(user_id: number, topic_id: number) {
     const topic = await this.topicRepository.findOne({
       where: {
         topic_id: topic_id,
@@ -190,14 +190,14 @@ export class TopicsService {
   }
 
   async createTopicFromTranscript(
-    user_id: string,
+    user_id: number,
     url: string,
     level: string,
     topic_name: string,
   ) {
     const user = await this.userRepository.findOne({
       where: {
-        id: Number(user_id),
+        id: user_id,
       },
     });
 
@@ -260,13 +260,13 @@ export class TopicsService {
     }
   }
 
-  async reviseTopicCards(userId: string, topicId: number) {
+  async reviseTopicCards(userId: number, topicId: number) {
     const today = new Date();
     // today.setHours(0, 0, 0, 0); // Để so sánh chính xác đến ngày
 
     const cardsToReview = await this.reviewRepository.find({
       where: {
-        user: { id: Number(userId) },
+        user: { id: userId },
         card: {
           topic: { topic_id: topicId },
         },

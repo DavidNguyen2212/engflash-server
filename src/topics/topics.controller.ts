@@ -18,10 +18,14 @@ import { JwtAuthGuard } from '../auth/guards';
 import { TopicsService } from './topics.service';
 import { CurrentUser } from '../auth/decorators';
 import { ProcessTranscriptDto, ProcessVideoDto } from './dto';
+import { JwtPayload } from '../auth/interface';
+import { Roles } from '../common/decorators';
+import { RolesGuard } from '../common/guards';
+import { AllRoles } from '../role/constant';
 
 @ApiTags('topics')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('topics')
 export class TopicsController {
   constructor(private readonly topicsService: TopicsService) {}
@@ -30,11 +34,12 @@ export class TopicsController {
 
   // Learning
   @Get()
+  @Roles(AllRoles.User)
   @ApiOperation({ summary: 'Get all topic id of current user' })
   @ApiResponse({ status: 201, description: 'Successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getAllTopics(@CurrentUser() user) {
+  async getAllTopics(@CurrentUser() user: JwtPayload) {
     return this.topicsService.getAllTopicsByUser(user.id);
   }
 
@@ -45,7 +50,7 @@ export class TopicsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiParam({ name: 'topicId', type: Number })
   async getCardsBySet(
-    @CurrentUser() user,
+    @CurrentUser() user: JwtPayload,
     @Param('topicId', ParseIntPipe) topicId: number,
   ) {
     return this.topicsService.getAllCardsfromTopic(user.id, topicId);
@@ -57,7 +62,7 @@ export class TopicsController {
   @ApiResponse({ status: 201, description: 'Successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async processVideo(@CurrentUser() user, @Body() data: ProcessVideoDto) {
+  async processVideo(@CurrentUser() user: JwtPayload, @Body() data: ProcessVideoDto) {
     return this.topicsService.createTranscriptFromVideo(data.url);
   }
 
@@ -67,7 +72,7 @@ export class TopicsController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async createTopicFromScript(
-    @CurrentUser() user,
+    @CurrentUser() user: JwtPayload,
     @Body() data: ProcessTranscriptDto,
   ) {
     return this.topicsService.createTopicFromTranscript(
@@ -88,7 +93,7 @@ export class TopicsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiParam({ name: 'topicId', required: true, type: Number })
   async getCardRevisionTopic(
-    @CurrentUser() user,
+    @CurrentUser() user: JwtPayload,
     @Param('topicId', ParseIntPipe) topicId: number,
   ) {
     return this.topicsService.reviseTopicCards(user.id, topicId);
