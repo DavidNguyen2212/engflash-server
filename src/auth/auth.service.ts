@@ -20,6 +20,8 @@ import { REDIS_CONFIG } from './constant';
 import { BasicAuthResult } from './interface';
 import { DataSource, QueryRunner } from 'typeorm';
 import { TransactionalRunner } from '../common/decorators/transactionRetry.decorator';
+import { ClientProxy } from '@nestjs/microservices';
+import { SendCodeEvent } from './events';
 
 @Injectable()
 export class AuthService {
@@ -33,6 +35,8 @@ export class AuthService {
     @Inject('REDIS')
     private readonly redis: Redis,
     private readonly dataSource: DataSource,
+    @Inject('EMAIL_QUEUE')
+    private readonly emailClient: ClientProxy
   ) {
     this.transactionalRunner = new TransactionalRunner(dataSource);
   }
@@ -80,10 +84,13 @@ export class AuthService {
     });
 
     // Send verification email outside transaction
-    await this.emailService.sendVerificationCode(
-      user.email,
-      verificationCode,
-    );
+    const event = new SendCodeEvent(user.email, verificationCode)
+    this.emailClient.emit('email.verify', event).subscribe({
+      next: () => {
+        console.log(`✅ [AuthService] Event published for user ${user.email}`);
+      },
+      error: (err) => console.error('Failed to publish event:', err),
+    })
 
     return {
       message: 'Signing up successfully. Check your email for verification code!',
@@ -186,7 +193,14 @@ export class AuthService {
       verificationCodeExpiresAt,
     });
 
-    await this.emailService.sendVerificationCode(email, verificationCode);
+    // Send verification email outside transaction
+    const event = new SendCodeEvent(email, verificationCode)
+    this.emailClient.emit('email.verify', event).subscribe({
+      next: () => {
+        console.log(`✅ [AuthService] Event published for user ${user.email}`);
+      },
+      error: (err) => console.error('Failed to publish event:', err),
+    })
 
     return {
       message: 'Verification code sent successfully',
@@ -323,7 +337,15 @@ export class AuthService {
       resetCodeAttempts: 0,
     });
 
-    await this.emailService.sendPasswordResetCode(email, resetCode);
+    // Send passcode
+    const event = new SendCodeEvent(user.email, resetCode)
+    this.emailClient.emit('email.reset-password', event).subscribe({
+      next: () => {
+        console.log(`✅ [AuthService] Event published for user ${user.email}`);
+      },
+      error: (err) => console.error('Failed to publish event:', err),
+    })
+
     return {
       message: 'Reset code has been sent.',
     };

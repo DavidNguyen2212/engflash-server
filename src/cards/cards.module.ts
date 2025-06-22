@@ -15,7 +15,7 @@ import {
 } from './entities';
 import { SharedModule } from 'src/shared/shared.module';
 import { User } from 'src/users/entities';
-import { QueueModule } from '../rabbitmq/queue.module';
+import { CardQueueModule } from '../rabbitmq/cards/cardQueue.module';
 
 @Module({
   // We need forwardRef because we are importing the CardsModule in the TopicsModule and the SetsModule
@@ -33,7 +33,7 @@ import { QueueModule } from '../rabbitmq/queue.module';
     forwardRef(() => TopicsModule),
     forwardRef(() => SetsModule),
     SharedModule,
-    QueueModule,
+    CardQueueModule,
   ],
   controllers: [CardsController],
   providers: [CardsService],

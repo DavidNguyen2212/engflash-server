@@ -23,7 +23,7 @@ import {
 import { OpenAIService } from 'src/shared/services/openai.service';
 import { User } from 'src/users/entities';
 import { ClientProxy } from '@nestjs/microservices';
-import { CardReviewCreatedEvent } from '../shared/events';
+import { CardReviewCreatedEvent } from './events';
 
 @Injectable()
 export class CardsService {
@@ -44,7 +44,7 @@ export class CardsService {
     @InjectRepository(UserCardReviewLog)
     private reviewLogRepository: Repository<UserCardReviewLog>,
     private openaiService: OpenAIService,
-    @Inject('RABBITMQ_SERVICE') private readonly rabbitClient: ClientProxy,
+    @Inject('FLASHCARD_QUEUE') private readonly flashCardClient: ClientProxy,
   ) {}
 
   async generateAIGrammar(user_id: string, card_id: number) {
@@ -210,155 +210,40 @@ export class CardsService {
     );
   }
 
-  // async swipeCard(userId: number, { card_id, rating, event_type }: ReviewCardDTO) {
-  //   // 1. Find the card
-  //   const card = await this.cardRepository.findOne({
-  //     where: { card_id, user: { id: userId } },
-  //   });
-  //   if (!card) throw new NotFoundException('Card not found');
-
-  //   // Get review corresponding to this card
-  //   let review = await this.reviewRepository.findOne({
-  //     where: {
-  //       card: { card_id },
-  //       user: { id: userId },
-  //     },
-  //     relations: ['card', 'user'],
-  //   });
-
-  //   const now = new Date();
-  //   const isFirstReview = !review;
-
-  //   // If there's no record in review table => insert one
-  //   if (!review) {
-  //     review = this.reviewRepository.create({
-  //       user: { id: userId },
-  //       card: { card_id },
-  //       ease_factor: 2.5,
-  //       interval: 0,
-  //       repetitions: 0,
-  //       last_review_date: now,
-  //       next_review_date: now,
-  //     });
-  //   }
-
-  //   if (rating === 'good') {
-  //     review.repetitions += 1;
-  //     review.ease_factor = Math.max(1.3, review.ease_factor + 0.1);
-  //     if (review.repetitions === 1) {
-  //       review.interval = 1;
-  //     } else if (review.repetitions === 2) {
-  //       review.interval = 6;
-  //     } else {
-  //       review.interval = Math.round(review.interval * review.ease_factor);
-  //     }
-  //   } else {
-  //     review.repetitions = 0;
-  //     review.interval = 1;
-  //     review.ease_factor = Math.max(1.3, review.ease_factor - 0.2);
-  //   }
-
-  //   review.last_review_date = now;
-  //   review.next_review_date = new Date(
-  //     now.getTime() + review.interval * 24 * 60 * 60 * 1000
-  //   )
-
-  //   const savedReview = await this.reviewRepository.save(review);
-  //   if (isFirstReview) {
-  //     const choices = await this.openaiService.createMultipleChoice(
-  //       card.front_text,
-  //       card.back_text,
-  //     );
-  //     const choiceEntities = choices.map((text) =>
-  //       this.choiceRepository.create({
-  //         text,
-  //         isCorrect: text === capitalizeFirstLetter(card.back_text),
-  //         review: savedReview,
-  //       }),
-  //     );
-  //     await this.choiceRepository.save(choiceEntities);
-  //   }
-
-  //   await this.reviewLogRepository.save(
-  //     this.reviewLogRepository.create({
-  //       user: { id: userId },
-  //       card: { card_id },
-  //       rating,
-  //       event_type,
-  //       reviewed_at: now,
-  //     }),
-  //   );
-  //   return savedReview;
-  // }
-
   async swipeCard(userId: number, { card_id, rating, event_type }: ReviewCardDTO) {
     const now = new Date();
-  
     const card = await this.cardRepository.findOne({
       where: { card_id, user: { id: userId } },
     });
     if (!card) throw new NotFoundException('Card not found');
-  
-    let review = await this.reviewRepository.findOne({
-      where: {
-        card: { card_id },
-        user: { id: userId },
-      },
-      relations: ['card', 'user'],
-    });
-  
-    const isFirstReview = !review;
-    if (!review) {
-      review = this.reviewRepository.create({
-        user: { id: userId },
-        card: { card_id },
-        ease_factor: 2.5,
-        interval: 0,
-        repetitions: 0,
-        last_review_date: now,
-        next_review_date: now,
-      });
-    }
-  
-    if (rating === 'good') {
-      review.repetitions += 1;
-      review.ease_factor = Math.max(1.3, review.ease_factor + 0.1);
-      review.interval = review.repetitions === 1 ? 1 :
-                        review.repetitions === 2 ? 6 :
-                        Math.round(review.interval * review.ease_factor);
-    } else {
-      review.repetitions = 0;
-      review.interval = 1;
-      review.ease_factor = Math.max(1.3, review.ease_factor - 0.2);
-    }
-  
-    review.last_review_date = now;
-    review.next_review_date = new Date(now.getTime() + review.interval * 24 * 60 * 60 * 1000);
-  
-    const savedReview = await this.reviewRepository.save(review);
+
+    const quickResponse = {
+      card_id,
+      rating,
+      timestamp: now,
+      status: 'queued'
+    };
 
     // Push async task to worker
     const event = new CardReviewCreatedEvent(
       userId,
       card_id,
-      savedReview.id,
-      isFirstReview,
       card.front_text,
       card.back_text,
       rating,
       event_type,
-      now,
+      now.toISOString(),
     );
 
     // Fire and forget - don't wait for processing
-    this.rabbitClient.emit('card.review.created', event).subscribe({
+    this.flashCardClient.emit('card.swipe', event).subscribe({
       next: () => {
-        console.log(`✅ [CardsService] Event published for card ${card_id}, review ${savedReview.id}`);
+        console.log(`✅ [CardsService] Event published for card ${card_id}`);
       },
       error: (err) => console.error('Failed to publish event:', err),
     });
 
-    return savedReview;
+    return quickResponse;
   }
 
   async getNextCardsByScope(userId: number, limit: number, scope: { topicId?: number; setId?: number }, isMatching: boolean) {

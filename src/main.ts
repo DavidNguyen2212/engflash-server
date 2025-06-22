@@ -52,17 +52,26 @@ async function bootstrap() {
 
   // Thêm đoạn này để khởi động microservice RabbitMQ
   const rabbitmqUrl = configService.get<string>('RABBITMQ_URL') || 'amqp://localhost:5672';
-  const rabbitmqQueue = configService.get<string>('RABBITMQ_QUEUE') || 'default_queue';
-  
-  console.log('🔧 [Microservice] Connecting to RabbitMQ...');
-  console.log('🔧 [Microservice] URL:', rabbitmqUrl);
-  console.log('🔧 [Microservice] Queue:', rabbitmqQueue);
   
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
       urls: [rabbitmqUrl],
-      queue: rabbitmqQueue,
+      queue: configService.get<string>('RABBITMQ_CARD_QUEUE') || 'default_queue',
+      queueOptions: { durable: true },
+      socketOptions: {
+        heartbeatIntervalInSeconds: 60,
+        reconnectTimeInSeconds: 5,
+      },
+      // persistent: true,
+    },
+  });
+
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [rabbitmqUrl],
+      queue: configService.get<string>('RABBITMQ_EMAIL_QUEUE') || 'default_queue',
       queueOptions: { durable: true },
       socketOptions: {
         heartbeatIntervalInSeconds: 60,

@@ -1,17 +1,16 @@
-// src/messaging/consumers/card-review.consumer.ts
 import { Controller, Logger } from '@nestjs/common';
 import { EventPattern, Payload, Ctx, RmqContext } from '@nestjs/microservices';
-import { QueueService } from '../queue.service';
+import { CardQueueService } from '../cardQueue.service';
 
 @Controller()
 export class CardReviewConsumer {
   private readonly logger = new Logger(CardReviewConsumer.name);
   constructor(
-    private readonly queueService: QueueService
+    private readonly queueService: CardQueueService
   ) {}
 
-  @EventPattern('card.review.created')
-  async receiveCardReviewCreated(
+  @EventPattern('card.swipe')
+  async receiveSendingVerificationMail(
     @Payload() data: any,
     @Ctx() context: RmqContext,
   ) {
