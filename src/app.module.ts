@@ -16,6 +16,7 @@ import { HealthModule } from './health/health.module';
 import { DataSource } from 'typeorm';
 import { v2 as cloudinary } from 'cloudinary';
 import { OauthModule } from './oauth/oauth.module';
+import { QueueModule } from './rabbitmq/queue.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { OauthModule } from './oauth/oauth.module';
     NotificationsModule,
     HealthModule,
     OauthModule,
+    QueueModule
   ],
   controllers: [AppController],
   providers: [AppService],

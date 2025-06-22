@@ -262,7 +262,6 @@ export class TopicsService {
 
   async reviseTopicCards(userId: number, topicId: number) {
     const today = new Date();
-    // today.setHours(0, 0, 0, 0); // Để so sánh chính xác đến ngày
 
     const cardsToReview = await this.reviewRepository.find({
       where: {
@@ -273,6 +272,7 @@ export class TopicsService {
         next_review_date: LessThanOrEqual(today),
       },
       relations: ['card', 'choices'],
+      order: { next_review_date: 'ASC' }
     });
 
     if (!cardsToReview || cardsToReview.length === 0) {

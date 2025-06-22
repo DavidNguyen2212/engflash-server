@@ -18,11 +18,8 @@ import {
   UserCardReview,
   UserCardReviewLog,
 } from 'src/cards/entities';
-import axios from 'axios';
 import { User } from 'src/users/entities';
 import { OpenAIService } from 'src/shared/services/openai.service';
-import { DateTime } from 'luxon';
-import { UserDailyActivity } from 'src/statistics/entities';
 import { UpdateSetDTO } from './dto';
 import { Notification } from './entities';
 
@@ -40,8 +37,6 @@ export class NotificationsService {
     private topicRepository: Repository<Topic>,
     @InjectRepository(Set)
     private setRepository: Repository<Set>,
-    @InjectRepository(UserDailyActivity)
-    private dailyActivityRepository: Repository<UserDailyActivity>,
     @InjectRepository(UserCardReviewLog)
     private reviewLogRepository: Repository<UserCardReviewLog>,
     @InjectRepository(Notification)
@@ -50,30 +45,7 @@ export class NotificationsService {
   ) {}
 
   async updateSetAdmin(userId: number, data: UpdateSetDTO) {
-    const activities = await this.dailyActivityRepository.find({
-      where: { user: { id: userId } },
-      order: { date: 'DESC' },
-    });
-
-    let streak = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    for (let i = 0; i < activities.length; i++) {
-      const expectedDate = new Date(today);
-      expectedDate.setDate(today.getDate() - i);
-
-      const activityDate = new Date(activities[i].date);
-      activityDate.setHours(0, 0, 0, 0);
-
-      if (activityDate.getTime() === expectedDate.getTime()) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-
-    return { streak };
+    
   }
 
   async updateSet(id: number, dto: UpdateSetDTO) {

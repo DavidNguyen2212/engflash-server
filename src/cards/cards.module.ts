@@ -14,8 +14,8 @@ import {
   UserCardReviewLog,
 } from './entities';
 import { SharedModule } from 'src/shared/shared.module';
-import { UserDailyActivity } from 'src/statistics/entities';
 import { User } from 'src/users/entities';
+import { QueueModule } from '../rabbitmq/queue.module';
 
 @Module({
   // We need forwardRef because we are importing the CardsModule in the TopicsModule and the SetsModule
@@ -28,12 +28,12 @@ import { User } from 'src/users/entities';
       User,
       UserCardReview,
       UserCardReviewChoice,
-      UserDailyActivity,
       UserCardReviewLog,
     ]),
     forwardRef(() => TopicsModule),
     forwardRef(() => SetsModule),
     SharedModule,
+    QueueModule,
   ],
   controllers: [CardsController],
   providers: [CardsService],

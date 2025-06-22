@@ -2702,6 +2702,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/amqplib@npm:^0.10.7":
+  version: 0.10.7
+  resolution: "@types/amqplib@npm:0.10.7"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/058f466ef31df65e4d1b72f4d2ba41801e3b7227329cd1651f83eb98be3610aa2e116fbbccbbb65e062ad1358e59b32dfe9c69dd58cf3893bb8429d78e6653f5
+  languageName: node
+  linkType: hard
+
 "@types/babel__core@npm:^7.1.14":
   version: 7.20.5
   resolution: "@types/babel__core@npm:7.20.5"
@@ -5599,6 +5608,7 @@ __metadata:
     "@semantic-release/github": "npm:^11.0.3"
     "@swc/cli": "npm:^0.6.0"
     "@swc/core": "npm:^1.10.7"
+    "@types/amqplib": "npm:^0.10.7"
     "@types/bcryptjs": "npm:^3.0.0"
     "@types/cookie-parser": "npm:^1.4.9"
     "@types/express": "npm:^5.0.0"

@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -35,7 +36,7 @@ import { RolesGuard } from 'src/common/guards';
 @ApiTags('cards')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('learner')
+@Roles('user')
 @Controller('cards')
 export class CardsController {
   constructor(private readonly cardsService: CardsService) {}
@@ -125,5 +126,26 @@ export class CardsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async swipeCard(@CurrentUser() user, @Body() body: ReviewCardDTO) {
     return this.cardsService.swipeCard(user.id, body);
+  }
+
+  @Get('learn/next')
+  @ApiOperation({
+    summary: 'Get cards next!',
+  })
+  @ApiResponse({ status: 201, description: 'Successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiQuery({   name: 'limit', type: Number, required: true, description: 'Number card next', })
+  @ApiQuery({   name: 'topicId', type: Number, required: false, description: 'topic id', })
+  @ApiQuery({ name: 'setId', type: Number, required: false, description: 'set id' })
+  @ApiQuery({ name: 'isMatching', type: Boolean, required: false, description: 'matching exercise' })
+  async getNextCards(
+    @CurrentUser() user,
+    @Query('limit') limit = 10,
+    @Query('topicId') topicId?: number,
+    @Query('setId') setId?: number,
+    @Query('isMatching') isMatching = false
+  ) {
+    return this.cardsService.getNextCardsByScope(user.id, limit, {topicId, setId}, isMatching);
   }
 }

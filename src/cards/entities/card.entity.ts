@@ -35,8 +35,6 @@ export class Card {
 
   @Column({ type: 'text', nullable: true })
   grammar_markdown: string;
-  // @Column()
-  // is_learned: boolean
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -10,7 +10,6 @@ import {
 } from 'src/cards/entities';
 import { User } from 'src/users/entities';
 import { SharedModule } from 'src/shared/shared.module';
-import { UserDailyActivity } from 'src/statistics/entities';
 import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
 import { Notification } from './entities';
@@ -23,7 +22,6 @@ import { Notification } from './entities';
       Set,
       User,
       UserCardReview,
-      UserDailyActivity,
       UserCardReviewLog,
       Notification,
     ]),

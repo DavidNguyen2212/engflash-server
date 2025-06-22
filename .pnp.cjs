@@ -51,6 +51,7 @@ const RAW_RUNTIME_STATE =
           ["@semantic-release/github", "virtual:2e5c75c42732affab235599608c1220dd24a550ed512805523b6ad9e92c9a36a48e66c436f339795a0ac0c3589139ca5065c3f693592ab0469d99f4d4744a0ff#npm:11.0.3"],\
           ["@swc/cli", "virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:0.6.0"],\
           ["@swc/core", "virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:1.12.1"],\
+          ["@types/amqplib", "npm:0.10.7"],\
           ["@types/bcryptjs", "npm:3.0.0"],\
           ["@types/cookie-parser", "virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:1.4.9"],\
           ["@types/express", "npm:5.0.3"],\
@@ -2466,7 +2467,7 @@ const RAW_RUNTIME_STATE =
           ["@nestjs/microservices", "virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:11.1.3"],\
           ["@nestjs/websockets", null],\
           ["@types/amqp-connection-manager", null],\
-          ["@types/amqplib", null],\
+          ["@types/amqplib", "npm:0.10.7"],\
           ["@types/cache-manager", null],\
           ["@types/grpc__grpc-js", null],\
           ["@types/ioredis", null],\
@@ -3977,6 +3978,16 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["@types/amqplib", [\
+      ["npm:0.10.7", {\
+        "packageLocation": "../../AppData/Local/Yarn/Berry/cache/@types-amqplib-npm-0.10.7-bb7ca609aa-10c0.zip/node_modules/@types/amqplib/",\
+        "packageDependencies": [\
+          ["@types/amqplib", "npm:0.10.7"],\
+          ["@types/node", "npm:24.0.1"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["@types/babel__core", [\
       ["npm:7.20.5", {\
         "packageLocation": "../../AppData/Local/Yarn/Berry/cache/@types-babel__core-npm-7.20.5-4d95f75eab-10c0.zip/node_modules/@types/babel__core/",\
@@ -5463,7 +5474,7 @@ const RAW_RUNTIME_STATE =
       ["virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:4.1.14", {\
         "packageLocation": "./.yarn/__virtual__/amqp-connection-manager-virtual-5001385402/3/AppData/Local/Yarn/Berry/cache/amqp-connection-manager-npm-4.1.14-67f5084e9f-10c0.zip/node_modules/amqp-connection-manager/",\
         "packageDependencies": [\
-          ["@types/amqplib", null],\
+          ["@types/amqplib", "npm:0.10.7"],\
           ["amqp-connection-manager", "virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:4.1.14"],\
           ["amqplib", "npm:0.10.8"],\
           ["promise-breaker", "npm:6.0.0"]\
@@ -7490,6 +7501,7 @@ const RAW_RUNTIME_STATE =
           ["@semantic-release/github", "virtual:2e5c75c42732affab235599608c1220dd24a550ed512805523b6ad9e92c9a36a48e66c436f339795a0ac0c3589139ca5065c3f693592ab0469d99f4d4744a0ff#npm:11.0.3"],\
           ["@swc/cli", "virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:0.6.0"],\
           ["@swc/core", "virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:1.12.1"],\
+          ["@types/amqplib", "npm:0.10.7"],\
           ["@types/bcryptjs", "npm:3.0.0"],\
           ["@types/cookie-parser", "virtual:e7bc4507122b68e24d79f585d8f525b70f4552ca517cf8ca268ee440637f76f56185d1069c3c3882c651a0d5695abf1c5117a0987caa93173a55587d60687fe0#npm:1.4.9"],\
           ["@types/express", "npm:5.0.3"],\

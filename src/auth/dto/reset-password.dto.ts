@@ -23,12 +23,12 @@ export class ResetPasswordDto {
   @Length(6, 6)
   code: string;
 
-  @ApiProperty({
-    description: 'ID of the user',
-    example: 2,
-  })
-  @IsNumber()
-  user_id: number;
+  // @ApiProperty({
+  //   description: 'ID of the user',
+  //   example: 2,
+  // })
+  // @IsNumber()
+  // user_id: number;
 
   @ApiProperty({
     description: 'New password',

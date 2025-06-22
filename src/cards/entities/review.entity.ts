@@ -5,10 +5,14 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  Unique,
 } from 'typeorm';
 import { Card } from './card.entity';
 import { User } from '../../users/entities';
 
+
+// "OneToOne là quan hệ chặt, còn app bạn là ManyToOne nhưng được logic (@Unique) ép thành 1 bản ghi.
+@Unique(['user', 'card'])
 @Entity('user_card_reviews')
 export class UserCardReview {
   @PrimaryGeneratedColumn()
@@ -18,8 +22,11 @@ export class UserCardReview {
   @ManyToOne(() => User, (user) => user.cardReviews, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;
-
+ 
   // Quan hệ với Card
+  /* Không nên là OneToOne vật lý, chỉ cần logic @Unique(user, card) là đủ
+  OneToOne là quan hệ chặt, còn app này là ManyToOne nhưng được logic (@Unique) ép thành 1 bản ghi.
+   */
   @ManyToOne(() => Card, (card) => card.userReviews, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'card_id' })
   card: Card;
@@ -67,6 +74,19 @@ export class UserCardReviewChoice {
   review: UserCardReview;
 }
 
+// Phục vụ mục đích event-sourcing
+export enum ReviewEventType {
+  LEARN = 'learn',
+  REVIEW = 'review',
+}
+
+export enum ReviewRating {
+  GOOD = 'good',       // swipe right => good
+  AGAIN = 'again',     // swipe left => again
+  CORRECT = 'correct', // right answer (MCQ)
+  WRONG = 'wrong',     // bad answer (MCQ)
+}
+
 @Entity('user_card_review_logs')
 export class UserCardReviewLog {
   @PrimaryGeneratedColumn()
@@ -80,8 +100,11 @@ export class UserCardReviewLog {
   @JoinColumn({ name: 'card_id' })
   card: Card;
 
-  @Column({ type: 'varchar', length: 10 })
-  rating: 'good' | 'again';
+  @Column({ type: 'enum', enum: ReviewRating, nullable: false })
+  rating: ReviewRating;
+
+  @Column({ type: 'enum', enum: ReviewEventType, nullable: false, default: ReviewEventType.LEARN })
+  event_type: ReviewEventType;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   reviewed_at: Date;

@@ -18,8 +18,6 @@ import {
   UserCardReviewLog,
 } from 'src/cards/entities';
 import { User } from 'src/users/entities';
-import { OpenAIService } from 'src/shared/services/openai.service';
-import { UserDailyActivity } from './entities';
 import { DateTime } from 'luxon';
 
 @Injectable()
@@ -34,28 +32,27 @@ export class StatisticsService {
     private reviewRepository: Repository<UserCardReview>,
     @InjectRepository(Topic)
     private topicRepository: Repository<Topic>,
-    @InjectRepository(UserDailyActivity)
-    private dailyActivityRepository: Repository<UserDailyActivity>,
     @InjectRepository(UserCardReviewLog)
     private reviewLogRepository: Repository<UserCardReviewLog>,
-    private openaiService: OpenAIService,
   ) {}
 
   async getStreakLengthByUser(userId: number) {
-    const activities = await this.dailyActivityRepository.find({
-      where: { user: { id: userId } },
-      order: { date: 'DESC' },
-    });
+    const logs = await this.reviewLogRepository
+      .createQueryBuilder('log')
+      .select('DATE(log.reviewed_at)', 'date')
+      .where('log.user_id = :userId', { userId })
+      .groupBy('DATE(log.reviewed_at)')
+      .orderBy('date', 'DESC')
+      .getRawMany();
 
     let streak = 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    for (let i = 0; i < activities.length; i++) {
+    for (let i = 0; i < logs.length; i++) {
       const expectedDate = new Date(today);
       expectedDate.setDate(today.getDate() - i);
-
-      const activityDate = new Date(activities[i].date);
+      const activityDate = new Date(logs[i].date);
       activityDate.setHours(0, 0, 0, 0);
 
       if (activityDate.getTime() === expectedDate.getTime()) {
@@ -64,7 +61,7 @@ export class StatisticsService {
         break;
       }
     }
-
+    
     return { streak };
   }
 
@@ -150,7 +147,7 @@ export class StatisticsService {
           ) AS learned,
     
           COUNT(*) FILTER (
-            WHERE r.interval >= 21 OR r.last_review_date <= NOW() - INTERVAL '7 days'
+            WHERE r.interval >= 21 AND r.last_review_date <= NOW() - INTERVAL '7 days'
           ) AS mastered
     
         FROM cards c
@@ -164,40 +161,15 @@ export class StatisticsService {
   }
 
   async getCardStatusLongTimeByUser(user_id: string) {
-    // Lấy thời gian hiện tại theo timezone Asia/Ho_Chi_Minh
+    // Get current time (timezone Asia/Ho_Chi_Minh)
     const vietnamNow = DateTime.now().setZone('Asia/Ho_Chi_Minh');
 
-    // Set về đầu ngày hôm nay (00:00:00)
+    // Set to the very early of the day(00:00:00)
     const today = vietnamNow.startOf('day');
 
-    // === XỬ LÝ 5 NGÀY GẦN NHẤT ===
+    // === 5 day stats ===
     const fiveDaysAgo = today.minus({ days: 4 });
-
-    const fiveDayStats = await this.reviewLogRepository
-      .createQueryBuilder('log')
-      .select(
-        "TO_CHAR((log.reviewed_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh'), 'YYYY-MM-DD')",
-        'date',
-      )
-      .addSelect('COUNT(*)', 'count')
-      .where('log.user_id = :user_id', { user_id })
-      .andWhere(
-        `log.reviewed_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh' >= :startDate`,
-        {
-          startDate: fiveDaysAgo.toISODate(),
-        },
-      )
-      .andWhere(
-        `log.reviewed_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh' < :endDate`,
-        {
-          endDate: today.plus({ days: 1 }).toISODate(),
-        },
-      )
-      .groupBy(
-        "TO_CHAR((log.reviewed_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh'), 'YYYY-MM-DD')",
-      )
-      .orderBy('date', 'ASC')
-      .getRawMany();
+    const fiveDayStats = await this.getDailyStats(user_id, fiveDaysAgo, today.plus({ days: 1 }));
 
     const result5Days: { date: string | null; count: number }[] = [];
     for (let i = 0; i < 5; i++) {
@@ -207,35 +179,10 @@ export class StatisticsService {
       result5Days.push({ date: dateStr, count: stat ? Number(stat.count) : 0 });
     }
 
-    // === XỬ LÝ TUẦN NÀY ===
+    // === this week stats ===
     const weekday = today.weekday; // 1 = Monday, 7 = Sunday
     const monday = today.minus({ days: weekday - 1 });
-
-    const thisWeekStats = await this.reviewLogRepository
-      .createQueryBuilder('log')
-      .select(
-        "TO_CHAR((log.reviewed_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh'), 'YYYY-MM-DD')",
-        'date',
-      )
-      .addSelect('COUNT(*)', 'count')
-      .where('log.user_id = :user_id', { user_id })
-      .andWhere(
-        `log.reviewed_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh' >= :weekStart`,
-        {
-          weekStart: monday.toISODate(),
-        },
-      )
-      .andWhere(
-        `log.reviewed_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh' < :weekEnd`,
-        {
-          weekEnd: today.plus({ days: 1 }).toISODate(),
-        },
-      )
-      .groupBy(
-        "TO_CHAR((log.reviewed_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh'), 'YYYY-MM-DD')",
-      )
-      .orderBy('date', 'ASC')
-      .getRawMany();
+    const thisWeekStats = await this.getDailyStats(user_id, monday, today.plus({ days: 1 }));
 
     const result7Days: { date: string | null; count: number }[] = [];
     for (let i = 0; i < 7; i++) {
@@ -248,7 +195,6 @@ export class StatisticsService {
       } else {
         stat = thisWeekStats.find((d) => d.date === dateStr);
       }
-
       result7Days.push({ date: dateStr, count: stat ? Number(stat.count) : 0 });
     }
 
@@ -257,4 +203,18 @@ export class StatisticsService {
       last5DaysStats: result5Days,
     };
   }
+
+  private async getDailyStats(user_id: string, start: DateTime, end: DateTime) {
+    return await this.reviewLogRepository
+      .createQueryBuilder('log')
+      .select("TO_CHAR((log.reviewed_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh'), 'YYYY-MM-DD')", 'date')
+      .addSelect('COUNT(*)', 'count')
+      .where('log.user_id = :user_id', { user_id })
+      .andWhere(`log.reviewed_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh' >= :start`, { start: start.toISODate() })
+      .andWhere(`log.reviewed_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh' < :end`, { end: end.toISODate() })
+      .groupBy("TO_CHAR((log.reviewed_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh'), 'YYYY-MM-DD')")
+      .orderBy('date', 'ASC')
+      .getRawMany();
+  }
+  
 }

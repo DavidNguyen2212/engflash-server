@@ -18,9 +18,13 @@ import { Request } from 'express';
 import { RolesService } from '../role/role.service';
 import { REDIS_CONFIG } from './constant';
 import { BasicAuthResult } from './interface';
+import { DataSource, QueryRunner } from 'typeorm';
+import { TransactionalRunner } from '../common/decorators/transactionRetry.decorator';
 
 @Injectable()
 export class AuthService {
+  private readonly transactionalRunner: TransactionalRunner;
+
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
@@ -28,7 +32,10 @@ export class AuthService {
     private rolesService: RolesService,
     @Inject('REDIS')
     private readonly redis: Redis,
-  ) {}
+    private readonly dataSource: DataSource,
+  ) {
+    this.transactionalRunner = new TransactionalRunner(dataSource);
+  }
 
   // Abstract signup with consolidated logic
   async signup(signupDto: SignupDto) {
@@ -47,19 +54,35 @@ export class AuthService {
       isEmailVerified: false,
     };
 
-    let user: User;
-    if (existingUser) {
-      user = await this.usersService.update(existingUser.id, userData);
-    } else {
-      // Create new user and assign default role
-      user = await this.usersService.create(userData);
-      await this.rolesService.assignRole(user.id, 'user');
-    }
+    let user!: User;
+    const verificationCode = userData.verificationCode;
 
-    // Send verification email
+    // Option 1: Using TransactionalRunner (recommended for complex operations)
+    // await this.transactionalRunner.runWithRetry(async (queryRunner: QueryRunner) => {
+    //   if (existingUser) {
+    //     user = await this.usersService.update(existingUser.id, userData);
+    //   } else {
+    //     // Create new user and assign default role
+    //     user = await this.usersService.create(userData);
+    //     await this.rolesService.assignRole(user.id, 'user');
+    //   }
+    // });
+
+    // Option 2: Using direct transaction (current approach)
+    await this.dataSource.transaction(async (manager) => {
+      if (existingUser) {
+        user = await this.usersService.update(existingUser.id, userData);
+      } else {
+        // Create new user and assign default role
+        user = await this.usersService.create(userData);
+        await this.rolesService.assignRole(user.id, 'user');
+      }
+    });
+
+    // Send verification email outside transaction
     await this.emailService.sendVerificationCode(
       user.email,
-      userData.verificationCode,
+      verificationCode,
     );
 
     return {
@@ -191,7 +214,7 @@ export class AuthService {
       email: user.email,
       sub: user.id,
     };
-    return this.jwtService.sign(payload, { expiresIn: '2m' });
+    return this.jwtService.sign(payload, { expiresIn: '15m' });
   }
 
   generateRfToken(user: Partial<User>) {
