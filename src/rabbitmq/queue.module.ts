@@ -7,6 +7,7 @@ import { User } from '../users/entities';
 import { Set } from '../sets/entities';
 import { SharedModule } from '../shared/shared.module';
 import { CardReviewConsumer } from './consumers/card-review.consumer';
+import { QueueService } from './queue.service';
 
 @Global()
 @Module({
@@ -54,14 +55,15 @@ import { CardReviewConsumer } from './consumers/card-review.consumer';
     ]),
   ],
   controllers: [CardReviewConsumer],
-  providers: [CardReviewConsumer],
+  // providers: [CardReviewConsumer],
+  providers: [QueueService],
   // exports: ['RABBITMQ_SERVICE'], => Sai
   /** Trong NestJS, khi bạn dùng ClientsModule.registerAsync, các provider được đăng ký sẽ được export thông qua chính ClientsModule, chứ không phải module của bạn 
    * Ta inject như sau
    * 
    * @Inject('RABBITMQ_SERVICE') private readonly rabbitClient: ClientProxy,
   */
-  exports: [ClientsModule]
+  exports: [ClientsModule, QueueService]
 })
 export class QueueModule {
   constructor() {

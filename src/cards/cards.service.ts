@@ -352,6 +352,9 @@ export class CardsService {
 
     // Fire and forget - don't wait for processing
     this.rabbitClient.emit('card.review.created', event).subscribe({
+      next: () => {
+        console.log(`✅ [CardsService] Event published for card ${card_id}, review ${savedReview.id}`);
+      },
       error: (err) => console.error('Failed to publish event:', err),
     });
 

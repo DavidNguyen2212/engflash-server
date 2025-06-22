@@ -72,7 +72,7 @@ async function bootstrap() {
     },
   });
 
-  await app.startAllMicroservices(); // <-- Dòng này để start microservice
+  await app.startAllMicroservices(); 
   console.log('✅ [Microservice] RabbitMQ microservice started successfully!');
 
   await app.listen(configService.get<string>('PORT') ?? 3000);
