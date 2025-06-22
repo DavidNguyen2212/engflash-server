@@ -9,7 +9,6 @@ import {
 } from 'typeorm';
 import { UserCardReview } from '../../cards/entities';
 import { BaseEntity } from '../../common/entities/base.entity';
-import { UserDailyActivity } from '../../statistics/entities';
 import { Notification } from '../../notifications/entities';
 import { Role } from '../../role/entities';
 
@@ -79,9 +78,6 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Set, (set) => set.user)
   sets: Set[];
-
-  @OneToMany(() => UserDailyActivity, (activity) => activity.user)
-  dailyActivities: UserDailyActivity[];
 
   @OneToMany(() => Notification, (notif) => notif.user)
   notifications: Notification[];

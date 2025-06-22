@@ -45,3 +45,4 @@ export const AppDataSource = new DataSource({
   },
   ssl: process.env.DATABASE_SSL === 'true',
 });
+// append 'public readonly' to 'name' var to avoid compilation errors

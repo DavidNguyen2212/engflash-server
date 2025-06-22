@@ -11,7 +11,6 @@ import {
 } from 'src/cards/entities';
 import { User } from 'src/users/entities';
 import { SharedModule } from 'src/shared/shared.module';
-import { UserDailyActivity } from './entities/activity.entity';
 
 @Module({
   imports: [
@@ -20,7 +19,6 @@ import { UserDailyActivity } from './entities/activity.entity';
       Card,
       User,
       UserCardReview,
-      UserDailyActivity,
       UserCardReviewLog,
     ]),
     forwardRef(() => CardsModule),

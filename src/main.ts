@@ -11,6 +11,7 @@ import {
   ValidationExceptionFilter,
 } from './common/filters';
 import * as cookieParser from 'cookie-parser';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -48,6 +49,31 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
+
+  // Thêm đoạn này để khởi động microservice RabbitMQ
+  const rabbitmqUrl = configService.get<string>('RABBITMQ_URL') || 'amqp://localhost:5672';
+  const rabbitmqQueue = configService.get<string>('RABBITMQ_QUEUE') || 'default_queue';
+  
+  console.log('🔧 [Microservice] Connecting to RabbitMQ...');
+  console.log('🔧 [Microservice] URL:', rabbitmqUrl);
+  console.log('🔧 [Microservice] Queue:', rabbitmqQueue);
+  
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [rabbitmqUrl],
+      queue: rabbitmqQueue,
+      queueOptions: { durable: true },
+      socketOptions: {
+        heartbeatIntervalInSeconds: 60,
+        reconnectTimeInSeconds: 5,
+      },
+      // persistent: true,
+    },
+  });
+
+  await app.startAllMicroservices(); // <-- Dòng này để start microservice
+  console.log('✅ [Microservice] RabbitMQ microservice started successfully!');
 
   await app.listen(configService.get<string>('PORT') ?? 3000);
 }

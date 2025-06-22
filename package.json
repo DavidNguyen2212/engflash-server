@@ -19,10 +19,10 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm": "yarn pnpify ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
-    "migration:generate": "yarn typeorm migration:generate database/migrations/GenerateMigration -d database/data-source.ts",
-    "migration:create": "yarn typeorm migration:create database/migrations/NewMigration -d database/data-source.ts",
-    "migration:run": "yarn typeorm migration:run -d database/data-source.ts",
-    "migration:revert": "yarn typeorm migration:revert -d database/data-source.ts"
+    "migration:generate": "yarn typeorm migration:generate src/database/migrations/GenerateMigration -d src/database/data-source.ts",
+    "migration:create": "yarn typeorm migration:create src/database/migrations/NewMigration -d src/database/data-source.ts",
+    "migration:run": "yarn typeorm migration:run -d src/database/data-source.ts",
+    "migration:revert": "yarn typeorm migration:revert -d src/database/data-source.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.0",
@@ -79,6 +79,7 @@
     "@semantic-release/changelog": "^6.0.3",
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.10.7",
+    "@types/amqplib": "^0.10.7",
     "@types/bcryptjs": "^3.0.0",
     "@types/cookie-parser": "^1.4.9",
     "@types/express": "^5.0.0",

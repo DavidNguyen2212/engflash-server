@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsIn, IsInt, IsNotEmpty, IsOptional, Validate } from 'class-validator';
+import { ReviewEventType, ReviewRating } from '../entities';
 
 // @AtLeastOneFieldDefined({ message: 'Phải cung cấp ít nhất một trường: front_text, back_text, hoặc example' })
 export class ReviewCardDTO {
@@ -11,11 +12,18 @@ export class ReviewCardDTO {
   card_id: number;
 
   @ApiProperty({
-    description: `'again' = quẹt trái, 'good' = quẹt phải`,
+    description: `'again' = quẹt trái, 'good' = quẹt phải, 'correct': trả lời đúng ở review, 'wrong' thì ngược lại`,
     example: 'again or good',
   })
-  @IsIn(['again', 'good']) // 'again' = quẹt trái, 'good' = quẹt phải
-  rating: 'again' | 'good';
+  @IsIn([ReviewRating.GOOD, ReviewRating.AGAIN, ReviewRating.CORRECT, ReviewRating.WRONG]) // 'again' = quẹt trái, 'good' = quẹt phải, 'correct': trả lời đúng ở review, 'wrong' thì ngược lại
+  rating: ReviewRating;
+
+  @ApiProperty({
+    description: `'again' = quẹt trái, 'good' = quẹt phải, 'correct': trả lời đúng ở review, 'wrong' thì ngược lại`,
+    example: 'again or good',
+  })
+  @IsIn([ReviewEventType.LEARN, ReviewEventType.REVIEW]) // 'again' = quẹt trái, 'good' = quẹt phải, 'correct': trả lời đúng ở review, 'wrong' thì ngược lại
+  event_type: ReviewEventType;
 }
 
 export class ReviseCardDTO {
