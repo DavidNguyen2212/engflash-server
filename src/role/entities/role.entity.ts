@@ -1,7 +1,8 @@
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { User } from '../../users/entities';
 
+@Index(['name'])
 @Entity('roles')
 export class Role extends BaseEntity {
   // 1. primary key
@@ -17,7 +18,7 @@ export class Role extends BaseEntity {
   description: string;
 
   // 4. Trạng thái của role, giúp admin có thể 'soft deactivate' mà không cần xóa lịch sử của user đấy
-  @Column({ nullable: false })
+  @Column({ nullable: false, default: true })
   isActive: boolean;
 
   // 5. Hai cột createdAt và updatedAt extends qua base entity rồi

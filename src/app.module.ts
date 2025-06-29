@@ -18,6 +18,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { OauthModule } from './oauth/oauth.module';
 import { CardQueueModule } from './rabbitmq/cards/cardQueue.module';
 import { EmailQueueModule } from './rabbitmq/emails/emailQueue.module'; 
+import { JwtModule } from '@nestjs/jwt';
 // import { LoggerModule } from './logger/logger.module';
 
 @Module({

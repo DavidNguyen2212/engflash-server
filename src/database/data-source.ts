@@ -8,7 +8,6 @@ config();
 // const requiredEnvVars = ['DATABASE_HOST', 'DATABASE_USERNAME', 'DATABASE_PASSWORD', 'DATABASE_NAME', 'DATABASE_PORT'];
 const requiredEnvVars = ['DATABASE_URL'];
 const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
-
 if (missingEnvVars.length > 0) {
   throw new Error(
     `Missing required environment variables: ${missingEnvVars.join(', ')}`,
@@ -31,7 +30,7 @@ export const AppDataSource = new DataSource({
   migrations: [
     process.env.NODE_ENV == 'production'
       ? 'dist/database/migrations/*.js'
-      : 'database/migrations/*.ts',
+      : 'src/database/migrations/*.ts',
   ],
   // Production settings
   synchronize: process.env.TYPEORM_SYNC === 'true', // NEVER true in production

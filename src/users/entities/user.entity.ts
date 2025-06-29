@@ -6,13 +6,25 @@ import {
   OneToMany,
   ManyToMany,
   JoinTable,
+  Index,
 } from 'typeorm';
 import { UserCardReview } from '../../cards/entities';
 import { BaseEntity } from '../../common/entities/base.entity';
-import { Notification } from '../../notifications/entities';
+import { NotificationRecipient } from '../../notifications/entities';
 import { Role } from '../../role/entities';
+import { Device } from './device.entity';
+import { Exclude } from 'class-transformer';
 
+/**
+Tạo index cho bảng trung gian
+* CREATE INDEX idx_user_roles_user_id ON user_roles(user_id);
+CREATE INDEX idx_user_roles_role_id ON user_roles(role_id);
+CREATE UNIQUE INDEX uniq_user_role_pair ON user_roles(user_id, role_id);
+
+ */
 @Entity('users')
+@Index(['lastLogin'])  // Index cho tìm kiếm nhanh theo thời gian đăng nhập
+@Index(['isActive'])   // Index để lọc nhanh theo trạng thái tài khoản
 export class User extends BaseEntity {
   // Trường này auto primary key
   @PrimaryGeneratedColumn()
@@ -27,6 +39,7 @@ export class User extends BaseEntity {
   @Column({ unique: true })
   email: string;
 
+  @Exclude() // exclude from find
   @Column()
   password: string;
 
@@ -79,8 +92,11 @@ export class User extends BaseEntity {
   @OneToMany(() => Set, (set) => set.user)
   sets: Set[];
 
-  @OneToMany(() => Notification, (notif) => notif.user)
-  notifications: Notification[];
+  @OneToMany(() => Device, (device) => device.user)
+  devices: Device[]
+
+  @OneToMany(() => NotificationRecipient, (recipient) => recipient.user)
+  notifications: NotificationRecipient[];
 
   // Eager giúp tự động load roles khi truy xuất user, mà bạn không cần gọi .find({ relations: ["roles"] })
   @ManyToMany(() => Role, (role) => role.users, { eager: true })

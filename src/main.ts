@@ -12,6 +12,8 @@ import {
 } from './common/filters';
 import * as cookieParser from 'cookie-parser';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { RedisIoAdapter } from './redis/redis-io.adapter';
+import Redis from 'ioredis';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -52,7 +54,11 @@ async function bootstrap() {
 
   // Thêm đoạn này để khởi động microservice RabbitMQ
   const rabbitmqUrl = configService.get<string>('RABBITMQ_URL') || 'amqp://localhost:5672';
-  
+  // Lấy Redis đã được Global module cung cấp
+  const redis = app.get<Redis>('REDIS');
+  // await redis.ping();
+  const redisIoAdapter = new RedisIoAdapter(app, redis);
+  app.useWebSocketAdapter(redisIoAdapter);
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
@@ -82,7 +88,6 @@ async function bootstrap() {
   });
 
   await app.startAllMicroservices(); 
-  console.log('✅ [Microservice] RabbitMQ microservice started successfully!');
 
   await app.listen(configService.get<string>('PORT') ?? 3000);
 }

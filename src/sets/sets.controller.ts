@@ -58,4 +58,24 @@ export class SetsController {
   ) {
     return this.setsService.reviseSetCards(user.id, setId);
   }
+
+  // @Patch('admin/sets/:setId')
+  // @ApiOperation({ summary: `Modify sets: admin priviledge` })
+  // @ApiResponse({ status: 201, description: 'Successfully' })
+  // @ApiResponse({ status: 400, description: 'Bad request' })
+  // @ApiResponse({ status: 401, description: 'Unauthorized' })
+  // @ApiParam({ name: 'setId', type: Number })
+  // async getStreakLength(
+  //   @CurrentUser() user,
+  //   @Param('setId', ParseIntPipe) setId: number,
+  //   @Body() body: UpdateSetDTO,
+  // ) {
+  //   const updatedSet = await this.notificationsService.updateSetAdmin(
+  //     setId,
+  //     body,
+  //   );
+  //   await this.notificationsService.notifySetUpdated(setId, updatedSet);
+
+  //   return updatedSet;
+  // }
 }

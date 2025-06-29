@@ -38,6 +38,10 @@ import { EmailQueueService } from './emailQueue.service';
               queue: rabbitmqQueue,
               queueOptions: {
                 durable: true,
+                arguments: {
+                  'x-dead-letter-exchange': '',
+                  'x-dead-letter-routing-key': 'email_queue_dlq', 
+                }
               },
               socketOptions: {
                 heartbeatIntervalInSeconds: 60,
@@ -51,14 +55,7 @@ import { EmailQueueService } from './emailQueue.service';
     ]),
   ],
   controllers: [VerificationConsumer],
-  // providers: [CardReviewConsumer],
   providers: [EmailQueueService],
-  // exports: ['RABBITMQ_SERVICE'], => Sai
-  /** Trong NestJS, khi bạn dùng ClientsModule.registerAsync, các provider được đăng ký sẽ được export thông qua chính ClientsModule, chứ không phải module của bạn 
-   * Ta inject như sau
-   * 
-   * @Inject('RABBITMQ_SERVICE') private readonly rabbitClient: ClientProxy,
-  */
   exports: [ClientsModule, EmailQueueService]
 })
 export class EmailQueueModule {
