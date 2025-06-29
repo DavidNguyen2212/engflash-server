@@ -12,6 +12,8 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { User } from 'src/users/entities';
 import { OpenAIService } from 'src/shared/services/openai.service';
+import { YoutubeTranscript } from 'youtube-transcript';
+import { decode } from 'html-entities';
 // import { decode } from 'html-entities';
 
 @Injectable()
@@ -123,70 +125,70 @@ export class TopicsService {
     return { cards, topic };
   }
 
+  
+    // const obj = {
+    //   Gpsd20Fee9Y: {
+    //     embedUrl: 'https://www.youtube.com/embed/Gpsd20Fee9Y',
+    //     captionUrl:
+    //       'https://res.cloudinary.com/djjbvhmjf/raw/upload/v1748160576/captions/Gpsd20Fee9Y.vtt',
+    //   },
+    //   'rxUm-2x-2dM': {
+    //     embedUrl: 'https://www.youtube.com/embed/rxUm-2x-2dM',
+    //     captionUrl:
+    //       'https://res.cloudinary.com/djjbvhmjf/raw/upload/v1748160703/captions/rxUm-2x-2dM.vtt',
+    //   },
+    //   '2UkYJTfaT8E': {
+    //     embedUrl: 'https://www.youtube.com/embed/2UkYJTfaT8E',
+    //     captionUrl:
+    //       'https://res.cloudinary.com/djjbvhmjf/raw/upload/v1748160873/captions/2UkYJTfaT8E.vtt',
+    //   },
+    // };
+
   async createTranscriptFromVideo(url: string) {
     // 1. Extract video ID
     const match = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
     if (!match) throw new BadRequestException('Invalid YouTube URL');
     const videoId = match[1];
 
-    const obj = {
-      Gpsd20Fee9Y: {
-        embedUrl: 'https://www.youtube.com/embed/Gpsd20Fee9Y',
-        captionUrl:
-          'https://res.cloudinary.com/djjbvhmjf/raw/upload/v1748160576/captions/Gpsd20Fee9Y.vtt',
-      },
-      'rxUm-2x-2dM': {
-        embedUrl: 'https://www.youtube.com/embed/rxUm-2x-2dM',
-        captionUrl:
-          'https://res.cloudinary.com/djjbvhmjf/raw/upload/v1748160703/captions/rxUm-2x-2dM.vtt',
-      },
-      '2UkYJTfaT8E': {
-        embedUrl: 'https://www.youtube.com/embed/2UkYJTfaT8E',
-        captionUrl:
-          'https://res.cloudinary.com/djjbvhmjf/raw/upload/v1748160873/captions/2UkYJTfaT8E.vtt',
-      },
-    };
+    // 2. Fetch the transcript array [{ text, start, duration }]
+    const transcript = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' })
 
-    // // 2. Fetch the transcript array [{ text, start, duration }]
-    // const transcript = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' })
+    // 3. Build WebVTT content
+    const vttLines = ["WEBVTT\n"]
+    transcript.forEach(({ text, duration, offset }) => {
+      const startMs = offset * 1000
+      const endMs = (offset + duration) * 1000
+      const decoded = decode(decode(text));
+      const fmt = (ms: number) => new Date(ms).toISOString().substring(11, 23).replace('.', ',')
+      vttLines.push(
+        `${fmt(startMs)} --> ${fmt(endMs)}`,
+        decoded,
+        ''
+      )
+    })
+    const vttContent = vttLines.join('\n')
 
-    // // 3. Build WebVTT content
-    // const vttLines = ["WEBVTT\n"]
-    // transcript.forEach(({ text, duration, offset }) => {
-    //   const startMs = offset * 1000
-    //   const endMs = (offset + duration) * 1000
-    //   const decoded = decode(decode(text));
-    //   const fmt = (ms: number) => new Date(ms).toISOString().substring(11, 23).replace('.', ',')
-    //   vttLines.push(
-    //     `${fmt(startMs)} --> ${fmt(endMs)}`,
-    //     decoded,
-    //     ''
-    //   )
-    // })
-    // const vttContent = vttLines.join('\n')
+    // 4. Upload to cloudinary
+    const uploadResult: any = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'raw',
+          public_id: `captions/${videoId}`,
+          overwrite: true,
+          format: 'vtt',
+        },
+        (error, result) => {
+          if (error) return reject(error)
+          resolve(result)
+        }
+      )
+      uploadStream.end(Buffer.from(vttContent, 'utf8'))
+    })
 
-    // // 4. Upload to cloudinary
-    // const uploadResult: any = await new Promise((resolve, reject) => {
-    //   const uploadStream = cloudinary.uploader.upload_stream(
-    //     {
-    //       resource_type: 'raw',
-    //       public_id: `captions/${videoId}`,
-    //       overwrite: true,
-    //       format: 'vtt',
-    //     },
-    //     (error, result) => {
-    //       if (error) return reject(error)
-    //       resolve(result)
-    //     }
-    //   )
-    //   uploadStream.end(Buffer.from(vttContent, 'utf8'))
-    // })
-
-    // return {
-    //   embedUrl: `https://www.youtube.com/embed/${videoId}`,
-    //   captionUrl: uploadResult.secure_url
-    // }
-    return obj[videoId];
+    return {
+      embedUrl: `https://www.youtube.com/embed/${videoId}`,
+      captionUrl: uploadResult.secure_url
+    }
   }
 
   async createTopicFromTranscript(

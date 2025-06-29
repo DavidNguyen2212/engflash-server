@@ -2,12 +2,12 @@ import { Global, Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Card, Topic, UserCardReview, UserCardReviewChoice, UserCardReviewLog } from '../cards/entities';
-import { User } from '../users/entities';
-import { Set } from '../sets/entities';
-import { SharedModule } from '../shared/shared.module';
+import { Card, Topic, UserCardReview, UserCardReviewChoice, UserCardReviewLog } from '../../cards/entities';
+import { User } from '../../users/entities';
+import { Set } from '../../sets/entities';
+import { SharedModule } from '../../shared/shared.module';
 import { CardReviewConsumer } from './consumers/card-review.consumer';
-import { QueueService } from './queue.service';
+import { CardQueueService } from './cardQueue.service';
 
 @Global()
 @Module({
@@ -25,15 +25,11 @@ import { QueueService } from './queue.service';
     SharedModule,
     ClientsModule.registerAsync([
       {
-        name: 'RABBITMQ_SERVICE',
+        name: 'FLASHCARD_QUEUE',
         imports: [ConfigModule],
         useFactory: (configService: ConfigService) => {
           const rabbitmqUrl = configService.get<string>('RABBITMQ_URL') || 'amqp://localhost:5672';
-          const rabbitmqQueue = configService.get<string>('RABBITMQ_QUEUE') || 'default_queue';
-          
-          console.log('🔧 [QueueModule] Configuring RabbitMQ client...');
-          console.log('🔧 [QueueModule] URL:', rabbitmqUrl);
-          console.log('🔧 [QueueModule] Queue:', rabbitmqQueue);
+          const rabbitmqQueue = configService.get<string>('RABBITMQ_CARD_QUEUE') || 'default_queue';
           
           return {
             transport: Transport.RMQ,
@@ -56,17 +52,17 @@ import { QueueService } from './queue.service';
   ],
   controllers: [CardReviewConsumer],
   // providers: [CardReviewConsumer],
-  providers: [QueueService],
+  providers: [CardQueueService],
   // exports: ['RABBITMQ_SERVICE'], => Sai
   /** Trong NestJS, khi bạn dùng ClientsModule.registerAsync, các provider được đăng ký sẽ được export thông qua chính ClientsModule, chứ không phải module của bạn 
    * Ta inject như sau
    * 
    * @Inject('RABBITMQ_SERVICE') private readonly rabbitClient: ClientProxy,
   */
-  exports: [ClientsModule, QueueService]
+  exports: [ClientsModule, CardQueueService]
 })
-export class QueueModule {
+export class CardQueueModule {
   constructor() {
-    console.log('[QueueModule] Loaded!');
+    console.log('[CardQueueModule] Loaded!');
   }
 }

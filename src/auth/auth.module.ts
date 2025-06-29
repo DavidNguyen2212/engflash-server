@@ -9,6 +9,7 @@ import { JwtStrategy } from './strategies';
 import { SharedModule } from '../shared/shared.module';
 import { RolesModule } from 'src/role/role.module';
 import { RedisModule } from 'src/redis/redis.module';
+import { EmailQueueModule } from '../rabbitmq/emails/emailQueue.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { RedisModule } from 'src/redis/redis.module';
       }),
       inject: [ConfigService],
     }),
+    EmailQueueModule
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
